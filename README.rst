@@ -1,3 +1,5 @@
+This is fork of TracBlockdiag for our maintenance purpose.
+
 Introduction
 ============
 TracBlockdiag is a trac plugin that integrate blockdiag series into wiki pages.
