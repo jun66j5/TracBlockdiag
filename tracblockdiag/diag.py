@@ -56,7 +56,7 @@ class BaseBuilder(object):
     def draw_svg(self, diagram, options):
         drawer = self.DiagramDraw('SVG', diagram, None, **options)
         drawer.draw()
-        return drawer.save()
+        return drawer.save().encode('utf-8')
 
     def create_fontmap(self, font):
         fontmap = FontMap()
