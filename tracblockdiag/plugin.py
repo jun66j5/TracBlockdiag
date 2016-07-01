@@ -4,11 +4,10 @@ import re
 from bz2 import compress, decompress
 from base64 import b64encode, b64decode
 
-from trac.core import *
+from trac.core import Component, implements
 from trac.util.html import html
 from trac.web import IRequestHandler
 from trac.wiki import IWikiMacroProvider
-from trac.wiki.formatter import system_message
 
 from . import diag, cache
 
