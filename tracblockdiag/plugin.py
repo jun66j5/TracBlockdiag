@@ -4,6 +4,7 @@ import re
 from bz2 import compress, decompress
 from base64 import b64encode, b64decode
 
+from trac.config import BoolOption, IntOption, ListOption, Option
 from trac.core import Component, implements
 from trac.util.html import html
 from trac.web import IRequestHandler
@@ -42,21 +43,40 @@ _conf_section = 'tracblockdiag'
 ALTERNATIVE_TEXT = "Your browser doesn't support svg"
 
 class BlockdiagRenderer(Component):
+
     implements(IWikiMacroProvider, IRequestHandler)
 
+    font = ListOption(_conf_section, 'font',
+        doc="Paths to font file which are used in PNG generation.")
+
+    default_type = Option(_conf_section, 'default_type', 'svg',
+        doc="Default diagram type to generate.")
+
+    fallback = BoolOption(_conf_section, 'fallback', 'disabled',
+        doc="Fallback to png image when a browser is not support svg. Note "
+            "that using fallback causes double image generation because major "
+            "browsers request png image whether svg rendering succeeded or "
+            "not. So, enabling this option may causes high load.")
+
+    syntax_check = BoolOption(_conf_section, 'syntax_check', 'enabled',
+        doc="Check syntax of source text and show error instead of 500 "
+            "response. Note that when using syntax check, the performance is "
+            "slightly down.")
+
+    cachetime = IntOption(_conf_section, 'cachetime', '300',
+        doc="Time in seconds which the plugin caches a generated diagram in.")
+
+    gc_interval = IntOption(_conf_section, 'gc_interval', '100',
+        doc="The number of diagram generation. Unused cache is cleared every "
+            "this count.")
+
+    url = re.compile(r'/blockdiag/([a-z]+)/(png|svg)/(.+)')
+
+    url_template = 'blockdiag/%(diag)s/%(type)s/%(data)s'
+
     def __init__(self):
-        self.font = self.config.getlist(_conf_section, 'font')
-        self.default_type = self.config.get(_conf_section, 'default_type',
-                                            'svg')
-        self.fallback = self.config.getbool(_conf_section, 'fallback', False)
-        self.syntax_check = self.config.getbool(_conf_section, 'syntax_check',
-                                                True)
-        cachetime = self.config.getint(_conf_section, 'cachetime', 300)
-        gc_interval = self.config.getint(_conf_section, 'gc_interval', 100)
-        self.url = re.compile(r'/blockdiag/([a-z]+)/(png|svg)/(.+)')
-        self.url_template = 'blockdiag/%(diag)s/%(type)s/%(data)s'
-        cache.set_gc_params(gc_interval, cachetime)
-        self.get_diag = cache.memoize(cachetime)(diag.get_diag)
+        cache.set_gc_params(self.gc_interval, self.cachetime)
+        self.get_diag = cache.memoize(self.cachetime)(diag.get_diag)
 
     def get_macros(self):
         return macro_defs.keys()
